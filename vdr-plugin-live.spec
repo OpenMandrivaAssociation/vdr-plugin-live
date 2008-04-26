@@ -2,30 +2,32 @@
 %define plugin	live
 %define name	vdr-plugin-%plugin
 %define version	0.1.0
+%define snapshot 20080424
 %define rel	1
 
 Summary:	VDR plugin: Live Integrated VDR Environment
 Name:		%name
 Version:	%version
+%if %snapshot
+Release:	%mkrel 1.%snapshot.%rel
+%else
 Release:	%mkrel %rel
+%endif
 Group:		Video
 License:	GPLv2+
 URL:		http://live.vdr-developer.org/
+%if %snapshot
+Source:		vdr-%plugin-%snapshot.tar.gz
+%else
 Source:		http://live.vdr-developer.org/downloads/vdr-%plugin-%version.tar.gz
-# From e-tobi repository:
-Patch0:		91_timer-delete-fix.dpatch
-Patch1:		92_live-0.1.0-1.5.3.dpatch
-Patch2:		01_tnt-1.6.0.dpatch
-# (Anssi 01/2008) Fix trivial build issues with tntnet 1.6.1:
-# This patch is not enough to get it to work.
-Patch3:		live-tntnet-1.6.1.patch
+%endif
 BuildRoot:	%{_tmppath}/%{name}-buildroot
-BuildRequires:	vdr-devel >= 1.4.7-9
+BuildRequires:	vdr-devel >= 1.6.0
 Requires:	vdr-abi = %vdr_abi
 BuildRequires:	tntnet-devel
 BuildRequires:	boost-devel
 BuildRequires:	openssl-devel
-BuildRequires:	epgsearch-devel
+BuildRequires:	epgsearch-devel >= 0.9.24
 
 %description
 Live, the "Live Interactive VDR Environment", is a plugin providing
@@ -39,14 +41,11 @@ and is thus very fast.
 %prep
 %setup -q -c
 cd %plugin
-%patch0 -p1
-%patch1 -p1
-%patch2 -p1
-#patch3 -p1
 
 # epgsearch-devel
 rm -rf epgsearch
-sed -i 's,"epgsearch/services.h",<vdr/epgsearch/services.h>,' epgsearch.cpp
+sed -i 's,"epgsearch/services.h",<vdr/epgsearch/services.h>,' epgsearch.cpp timerconflict.cpp
+%vdr_plugin_prep
 
 %vdr_plugin_params_begin %plugin
 # use PORT to listen for incoming connections instead of 8008
@@ -56,6 +55,20 @@ param="-p PORT"
 # multiple IPs can be separated with a space
 var=BIND_IP
 param=--ip=MULTIPLE_PARAMS
+# use SSLPORT to listen for incoming ssl connections instead of 8443
+var=SSLPORT
+param="-s PORT"
+# full path to a custom ssl certificate file
+var=CERT
+param="-c CERT"
+default="%{_sysconfdir}/pki/tls/private/vdr-%plugin.pem"
+# log level for tntnet (values: INFO, DEBUG,...)
+var=LOGLEVEL
+param="-l LOGLEVEL"
+# directory for epgimages
+var=EPGIMAGES
+param="-e EPGIMAGES"
+default="%{_vdr_epgimagesdir}"
 %vdr_plugin_params_end
 
 %build
@@ -72,10 +85,17 @@ install -d -m755 %{buildroot}%{_vdr_plugin_cfgdir}/%{plugin}
 touch %{buildroot}%{_vdr_plugin_cfgdir}/%{plugin}/httpd.config
 touch %{buildroot}%{_vdr_plugin_cfgdir}/%{plugin}/httpd.properties
 
+install -d -m755 %{buildroot}%{_vdr_plugin_datadir}
+cp -a live %{buildroot}%{_vdr_plugin_datadir}/
+for dir in %plugin/*; do
+	ln -s %{_vdr_plugin_datadir}/$dir %{buildroot}%{_vdr_plugin_cfgdir}/$dir
+done
+
 %clean
 rm -rf %{buildroot}
 
 %post
+%_create_ssl_certificate -g vdr -b vdr-%plugin
 %vdr_plugin_post %plugin
 
 %postun
@@ -87,3 +107,9 @@ rm -rf %{buildroot}
 %dir %attr(-,vdr,vdr) %{_vdr_plugin_cfgdir}/%{plugin}
 %ghost %{_vdr_plugin_cfgdir}/%{plugin}/httpd.config
 %ghost %{_vdr_plugin_cfgdir}/%{plugin}/httpd.properties
+%{_vdr_plugin_cfgdir}/%{plugin}/css
+%{_vdr_plugin_cfgdir}/%{plugin}/img
+%{_vdr_plugin_cfgdir}/%{plugin}/js
+%{_vdr_plugin_cfgdir}/%{plugin}/themes
+%{_vdr_plugin_datadir}/%{plugin}
+
