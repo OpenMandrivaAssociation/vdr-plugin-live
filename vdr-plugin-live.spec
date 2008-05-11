@@ -1,9 +1,9 @@
 
 %define plugin	live
 %define name	vdr-plugin-%plugin
-%define version	0.1.0
-%define snapshot 20080424
-%define rel	2
+%define version	0.2.0
+%define snapshot 0
+%define rel	1
 
 Summary:	VDR plugin: Live Integrated VDR Environment
 Name:		%name
@@ -18,8 +18,10 @@ License:	GPLv2+
 URL:		http://live.vdr-developer.org/
 %if %snapshot
 Source:		vdr-%plugin-%snapshot.tar.gz
+%define dirname	%plugin
 %else
 Source:		http://live.vdr-developer.org/downloads/vdr-%plugin-%version.tar.gz
+%define dirname	%plugin-%version
 %endif
 BuildRoot:	%{_tmppath}/%{name}-buildroot
 BuildRequires:	vdr-devel >= 1.6.0
@@ -39,9 +41,7 @@ plugins by SVDRP, Live has direct access to VDR's data structures
 and is thus very fast.
 
 %prep
-%setup -q -c
-cd %plugin
-
+%setup -q -n %dirname
 # epgsearch-devel
 rm -rf epgsearch
 sed -i 's,"epgsearch/services.h",<vdr/epgsearch/services.h>,' epgsearch.cpp timerconflict.cpp
@@ -72,13 +72,11 @@ default="%{_vdr_epgimagesdir}"
 %vdr_plugin_params_end
 
 %build
-cd %plugin
 # (01/2008) parallel build broken
 %vdr_plugin_build -j1
 
 %install
 rm -rf %{buildroot}
-cd %plugin
 %vdr_plugin_install
 
 install -d -m755 %{buildroot}%{_vdr_plugin_cfgdir}/%{plugin}
@@ -101,9 +99,9 @@ rm -rf %{buildroot}
 %postun
 %vdr_plugin_postun %plugin
 
-%files -f %plugin/%plugin.vdr
+%files -f %plugin.vdr
 %defattr(-,root,root)
-%doc %plugin/CONTRIBUTORS %plugin/HISTORY %plugin/README
+%doc CONTRIBUTORS HISTORY README
 %dir %attr(-,vdr,vdr) %{_vdr_plugin_cfgdir}/%{plugin}
 %ghost %{_vdr_plugin_cfgdir}/%{plugin}/httpd.config
 %ghost %{_vdr_plugin_cfgdir}/%{plugin}/httpd.properties
