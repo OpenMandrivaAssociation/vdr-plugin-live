@@ -3,7 +3,7 @@
 %define name	vdr-plugin-%plugin
 %define version	0.2.0
 %define snapshot 0
-%define rel	1
+%define rel	2
 
 Summary:	VDR plugin: Live Integrated VDR Environment
 Name:		%name
