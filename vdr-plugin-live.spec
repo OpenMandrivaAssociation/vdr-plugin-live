@@ -15,7 +15,7 @@ Release:	%mkrel %rel
 %endif
 Group:		Video
 License:	GPLv2+
-URL:		http://live.vdr-developer.org/
+URL:		https://live.vdr-developer.org/
 %if %snapshot
 Source:		vdr-%plugin-%snapshot.tar.gz
 %define dirname	%plugin
