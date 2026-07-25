@@ -9,9 +9,9 @@ Summary:	VDR plugin: Live Integrated VDR Environment
 Name:		%name
 Version:	%version
 %if %snapshot
-Release:	%mkrel 1.%snapshot.%rel
+Release:	2
 %else
-Release:	%mkrel %rel
+Release:	%rel.1
 %endif
 Group:		Video
 License:	GPLv2+
